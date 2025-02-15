@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotion Prediction</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.3.3/axios.min.js"></script>
+    <style>
+        /* Global styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: url('https://images.pexels.com/photos/674010/pexels-photo-674010.jpeg?auto=compress&cs=tinysrgb&w=600') no-repeat center center fixed;
+            background-size: cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #fff;
+            text-align: center;
+        }
+
+        /* Centered content box */
+        .container {
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 40px;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 600px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+
+        p {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+
+        /* Text area for tweet input */
+        textarea {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.1em;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+            resize: none;
+        }
+
+        /* Submit button */
+        button {
+            padding: 10px 20px;
+            font-size: 1.2em;
+            border: none;
+            background-color: #4CAF50;
+            color: #fff;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        /* Result box */
+        #result {
+            margin-top: 20px;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        /* For responsiveness */
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            h1 {
+                font-size: 2em;
+            }
+            p {
+                font-size: 1em;
+            }
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Emotion Prediction from Text</h1>
+        <p>Enter a tweet to predict the emotion.</p>
+        
+        <form id="emotion-form">
+            <textarea id="tweet-input" placeholder="Enter your tweet here..." rows="4"></textarea><br>
+            <button type="submit">Predict Emotion</button>
+        </form>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        // Handling the form submission to get the predicted emotion
+        document.getElementById('emotion-form').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            
+            const tweet = document.getElementById('tweet-input').value;
+            const resultDiv = document.getElementById('result');
+            
+            if (!tweet) {
+                resultDiv.innerHTML = "Please enter a tweet.";
+                resultDiv.style.color = "red";
+                return;
+            }
+
+            try {
+                const response = await axios.post('http://127.0.0.1:8000/predict/', {
+                    tweet: tweet
+                });
+
+                // Display the predicted emotion
+                const emotion = response.data.emotion;
+                resultDiv.innerHTML = `Predicted Emotion: <strong>${emotion}</strong>`;
+                resultDiv.style.color = "lightgreen";
+            } catch (error) {
+                // Handle errors
+                resultDiv.innerHTML = "Error: Unable to fetch prediction. Please try again.";
+                resultDiv.style.color = "red";
+            }
+        });
+    </script>
+</body>
+</html>
