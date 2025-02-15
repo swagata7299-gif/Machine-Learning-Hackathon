@@ -1,0 +1,60 @@
+import uvicorn
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+import joblib
+import re
+import string
+
+# Initialize FastAPI
+app = FastAPI()
+
+# Load your trained model and vectorizer
+try:
+    model = joblib.load('emotion_model.pkl')
+    tfidf = joblib.load('emotion_model_logistic.pkl')
+except FileNotFoundError:
+    raise Exception("Model or vectorizer file not found. Please ensure they are available in the correct path.")
+
+# Preprocessing function for the text
+def transform_text(text: str) -> str:
+    """Basic text preprocessing: lowercase, remove numbers and punctuation."""
+    text = text.lower()  # Convert to lowercase
+    text = re.sub(r'\d+', '', text)  # Remove numbers
+    text = text.translate(str.maketrans('', '', string.punctuation))  # Remove punctuation
+    text = ' '.join(text.split())  # Remove extra spaces
+    return text
+
+# Define the input model for predictions
+class TweetInput(BaseModel):
+    tweet: str
+
+# Define the prediction route
+@app.post("/predict/")
+async def predict_emotion(input: TweetInput):
+    try:
+        tweet = input.tweet
+        # Apply preprocessing to the input tweet
+        transformed_tweet = transform_text(tweet)  
+        # Transform text with the TF-IDF vectorizer
+        vectorized_tweet = tfidf.transform([transformed_tweet])
+        # Predict the emotion
+        prediction = model.predict(vectorized_tweet)  
+        
+        # Emotion dictionary
+        emotions = {
+            0: "Sadness",
+            1: "Joy",
+            2: "Love",
+            3: "Anger",
+            4: "Fear",
+            5: "Surprise"
+        }
+        return {"emotion": emotions[prediction[0]]}
+
+    except Exception as e:
+        # Return error message if something goes wrong
+        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+
+# Run the FastAPI server
+if __name__ == "__main__":
+    uvicorn.run(app, host="127.0.0.1", port=8000)
